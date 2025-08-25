@@ -279,6 +279,16 @@
             }
         };
 
+        // --- SECTION DEFINITIONS (GLOBAL) ---
+        const sections = {
+            leadership: { title: "Leadership Profile", type: 'score' },
+            personality: { title: "Personality Profile", type: 'multi', options: { "Energy Style": ["Introvert", "Ambivert", "Extrovert"], "Information Style": ["Pragmatist", "Visionary"], "Decision Style": ["Logical", "Empathetic"], "Lifestyle": ["Planner", "Adapter"] }},
+            communication: { title: "Communication & Group Climate", type: 'mixed', score_params: ["Clarity", "Receptiveness"], multi_params: { "Task Cohesion": ["Low", "Optimal", "High"], "Social Cohesion": ["Low", "Optimal", "High"], "Team Connection": ["Low", "Optimal", "High"], "Spontaneity": ["Low", "Optimal", "High"], "Honest Comms": ["Low", "Optimal", "High"] }},
+            mentalSkills: { title: "Mental Skills", type: 'score' },
+            copingSkills: { title: "Coping Skills", type: 'mixed', score_params: ["Problem Solving", "Emotional Regulation"], multi_params: { "Self Talk": ["Positive", "Negative"] }},
+            cognitiveProfile: { title: "Cognitive & Motivational Profile", type: 'multi', options: { "Motivation": ["Towards Pleasure", "Away From Pain"], "Focus Style": ["Solution Focus", "Problem Focus"], "Action Style": ["Proactive", "Reactive"], "Information Style": ["Global", "Specific"], "Reasoning Style": ["Optional", "Procedural"], "Primary System": ["Visual", "Auditory", "Kinesthetic"] }}
+        };
+
         function initializeData() {
             const savedData = localStorage.getItem('kvcWesterloMentalProfiles');
             if (savedData) {
@@ -314,15 +324,6 @@
         }
 
         function createParameterHTML(player, playerIndex) {
-            const sections = {
-                leadership: { title: "Leadership Profile", type: 'score' },
-                personality: { title: "Personality Profile", type: 'multi', options: { "Energy Style": ["Introvert", "Ambivert", "Extrovert"], "Information Style": ["Pragmatist", "Visionary"], "Decision Style": ["Logical", "Empathetic"], "Lifestyle": ["Planner", "Adapter"] }},
-                communication: { title: "Communication & Group Climate", type: 'mixed', score_params: ["Clarity", "Receptiveness"], multi_params: { "Task Cohesion": ["Low", "Optimal", "High"], "Social Cohesion": ["Low", "Optimal", "High"], "Team Connection": ["Low", "Optimal", "High"], "Spontaneity": ["Low", "Optimal", "High"], "Honest Comms": ["Low", "Optimal", "High"] }},
-                mentalSkills: { title: "Mental Skills", type: 'score' },
-                copingSkills: { title: "Coping Skills", type: 'mixed', score_params: ["Problem Solving", "Emotional Regulation"], multi_params: { "Self Talk": ["Positive", "Negative"] }},
-                cognitiveProfile: { title: "Cognitive & Motivational Profile", type: 'multi', options: { "Motivation": ["Towards Pleasure", "Away From Pain"], "Focus Style": ["Solution Focus", "Problem Focus"], "Action Style": ["Proactive", "Reactive"], "Information Style": ["Global", "Specific"], "Reasoning Style": ["Optional", "Procedural"], "Primary System": ["Visual", "Auditory", "Kinesthetic"] }}
-            };
-
             const column1Keys = ['leadership', 'personality', 'mentalSkills'];
             const column2Keys = ['communication', 'copingSkills', 'cognitiveProfile'];
             
@@ -340,7 +341,7 @@
                     if(scores.length > 0) {
                         const sum = scores.reduce((a, b) => a + b, 0);
                         const avg = (sum / scores.length).toFixed(1);
-                        averageScoreHTML = `<div class="average-score-container"><div class="average-score-bullet" style="background-color: ${getAverageScoreBackground(avg)}">${avg}</div><div class="average-score-label">average</div></div>`;
+                        averageScoreHTML = `<div class="average-score-container" data-avg-section="${sectionKey}"><div class="average-score-bullet" style="background-color: ${getAverageScoreBackground(avg)}">${avg}</div><div class="average-score-label">average</div></div>`;
                     }
                 }
 
@@ -498,6 +499,35 @@
             document.removeEventListener('touchend', endDrag);
         }
 
+        function updateAverageScore(playerIndex, sectionKey) {
+            const player = playerData[playerIndex];
+            const section = sections[sectionKey];
+            if (!player || !section || (section.type !== 'score' && section.type !== 'mixed')) {
+                return;
+            }
+
+            const scores = [];
+            const scoreKeys = section.type === 'mixed' ? section.score_params : Object.keys(player.data[sectionKey]);
+            scoreKeys.forEach(key => {
+                if (typeof player.data[sectionKey][key] === 'number') {
+                    scores.push(player.data[sectionKey][key]);
+                }
+            });
+
+            if (scores.length > 0) {
+                const sum = scores.reduce((a, b) => a + b, 0);
+                const avg = (sum / scores.length).toFixed(1);
+                
+                const cardElement = document.getElementById(`player-card-${playerIndex}`);
+                const avgContainer = cardElement.querySelector(`[data-avg-section="${sectionKey}"]`);
+                if (avgContainer) {
+                    const avgBullet = avgContainer.querySelector('.average-score-bullet');
+                    avgBullet.textContent = avg;
+                    avgBullet.style.backgroundColor = getAverageScoreBackground(avg);
+                }
+            }
+        }
+
         function updateScoreFromEvent(e) {
             const rect = currentDragElement.getBoundingClientRect();
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -519,6 +549,8 @@
             const section = currentDragElement.dataset.section;
             const param = currentDragElement.dataset.param;
             playerData[playerIndex].data[section][param] = score;
+
+            updateAverageScore(playerIndex, section);
         }
         
         // --- SAVE & LOAD LOGIC ---
