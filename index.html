@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KVC Westerlo - Advanced Mental Profiles</title>
+    <!-- Library for PDF Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        /* General Body and Font Styles */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        /* Player Card Container Styles */
+        .player-card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 15px; /* Reduced padding */
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            width: 28.7cm; 
+            height: 20cm;
+            box-sizing: border-box;
+            page-break-after: always;
+        }
+
+        /* Card Header Styles */
+        .card-header {
+            text-align: center;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 8px; /* Reduced padding */
+            margin-bottom: 10px; /* Reduced margin */
+        }
+
+        .card-header h1 {
+            margin: 0;
+            font-size: 1.8em; /* Reduced font size */
+            color: #1a2a4c;
+            font-weight: 700;
+        }
+
+        /* Main Content Area Layout */
+        .card-content {
+            display: flex;
+            flex-grow: 1;
+            gap: 15px; /* Reduced gap */
+            overflow: hidden;
+        }
+
+        /* Left Column: Player Info */
+        .player-info-col {
+            flex-basis: 25%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding-right: 15px; /* Reduced padding */
+            border-right: 2px solid #e0e0e0;
+        }
+        
+        .player-photo-container {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .player-info-col img {
+            width: 140px; /* Reduced size */
+            height: 140px; /* Reduced size */
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #1a2a4c;
+            margin-bottom: 10px;
+        }
+        
+        .photo-upload-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background-color: rgba(0,0,0,0.5);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        .player-photo-container:hover .photo-upload-overlay {
+            opacity: 1;
+        }
+
+
+        .player-info-col h2 {
+            margin: 0 0 8px 0;
+            font-size: 1.6em; /* Reduced font size */
+            color: #1a2a4c;
+        }
+
+        .player-info-col p {
+            margin: 0;
+            font-size: 1.3em; /* Reduced font size */
+            color: #555;
+            font-weight: 500;
+        }
+        
+        /* Right Column: Main Content */
+        .main-content-col {
+            flex-basis: 75%;
+            display: flex;
+            flex-direction: column;
+            gap: 4px; /* Reduced gap */
+        }
+
+        .section-wrapper {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 4px; /* Reduced margin */
+            align-items: stretch; 
+        }
+
+        .parameter-section {
+            flex-basis: 60%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        textarea.section-comment-box {
+            flex-basis: 40%;
+            border: 2px solid #FFF3B0;
+            background-color: #FFFAEA;
+            border-radius: 8px;
+            padding: 8px;
+            font-size: 0.8em; /* Reduced font size */
+            line-height: 1.3;
+            color: #555;
+            resize: none;
+            font-family: inherit;
+        }
+
+        .parameter-section h3 {
+            margin: 0 0 6px 0; /* Reduced margin */
+            font-size: 1em; /* Reduced font size */
+            color: #1a2a4c;
+            padding-bottom: 3px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .parameter {
+            display: grid;
+            grid-template-columns: 130px 1fr; /* Adjusted column */
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px; /* Reduced margin */
+        }
+
+        .parameter-name {
+            font-size: 0.85em; /* Reduced font size */
+            font-weight: 600;
+            text-align: right;
+        }
+        
+        /* Bar Styles */
+        .score-bar-container, .multi-option-bar {
+            background-color: #e9ecef;
+            border-radius: 25px;
+            height: 18px; /* Reduced height */
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+        }
+
+        .score-bar {
+            height: 100%;
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 8px;
+            box-sizing: border-box;
+        }
+
+        .score-value {
+            color: white;
+            font-weight: bold;
+            font-size: 0.7em; /* Reduced font size */
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+        }
+        .score-value.dark-text {
+            color: #333;
+            text-shadow: none;
+        }
+
+        .multi-option-bar {
+             border: 1px solid #ccc;
+        }
+        .multi-option {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.6em; /* Reduced font size */
+            padding: 0 2px;
+            text-align: center;
+        }
+        .multi-option.selected {
+            background-color: #38b000;
+            color: white;
+            font-weight: 700;
+        }
+        .multi-option.not-selected {
+            background-color: #e9ecef;
+            color: #adb5bd;
+        }
+        
+        .pdf-button {
+            margin-top: auto;
+            padding: 10px 18px; /* Reduced padding */
+            font-size: 0.9em; /* Reduced font size */
+            font-weight: 600;
+            color: white;
+            background-color: #1a2a4c;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .pdf-button:hover {
+            background-color: #2c4a8a;
+        }
+
+        /* Print-specific styles */
+        @media print {
+            body { background-color: #fff; padding: 0; margin: 0; }
+            .player-card { box-shadow: none; border: 1px solid #ccc; margin: 0; border-radius: 0; width: 100%; height: 100%; }
+            .no-print { display: none !important; }
+            textarea.section-comment-box { border-color: #FFC300; } /* Ensure border prints well */
+        }
+    </style>
+</head>
+<body>
+
+    <div id="cards-container"></div>
+
+    <script>
+        // --- PLAYER DATA ---
+        const playerData = [
+            {
+                fullName: "Roman Neustädter",
+                shirtNumber: 6,
+                photoUrl: "https://placehold.co/300x300/1a2a4c/ffffff?text=RN",
+                data: {
+                    leadership: { "Overall": 8, "By Example": 9, "Vocal": 7 },
+                    personality: { "Extroversion Energy": "Medium" },
+                    mentalSkills: {
+                        "Resilience": 8,
+                        "Psychological Energy": 7,
+                        "Achievement Drive": 9,
+                        "Growth Mindset": 7
+                    },
+                    copingSkills: {
+                        "Stress Control": 8,
+                        "Anxiety Control": 7,
+                        "Game Management": 9
+                    },
+                    cognitiveProfile: {
+                        "Motivation": "Away From Pain",
+                        "Focus Style": "Problem Focus",
+                        "Action Style": "Reactive",
+                        "Information Style": "Specific (Details)",
+                        "Reasoning Style": "Procedural",
+                        "Primary System": "Auditory"
+                    },
+                    comments: {
+                        leadership: "Leads with experience but communication can become negative under pressure.",
+                        personality: "Balanced energy. Not overly expressive but stable.",
+                        mentalSkills: "High drive to succeed and very resilient to setbacks. Mindset is more fixed on what he knows.",
+                        copingSkills: "Excellent at managing game situations and controlling stress. Can show anxiety when things go wrong.",
+                        cognitiveProfile: "Needs clear, step-by-step instructions. Motivated by preventing mistakes. Analyzes situations before acting."
+                    }
+                }
+            },
+            {
+                fullName: "Serhiy Sydorchuk",
+                shirtNumber: 8,
+                photoUrl: "https://placehold.co/300x300/c2a100/ffffff?text=SS",
+                data: {
+                    leadership: { "Overall": 9, "By Example": 8, "Vocal": 9 },
+                    personality: { "Extroversion Energy": "Med Low" },
+                    mentalSkills: {
+                        "Resilience": 9,
+                        "Psychological Energy": 8,
+                        "Achievement Drive": 8,
+                        "Growth Mindset": 8
+                    },
+                    copingSkills: {
+                        "Stress Control": 9,
+                        "Anxiety Control": 9,
+                        "Game Management": 8
+                    },
+                    cognitiveProfile: {
+                        "Motivation": "Towards Pleasure",
+                        "Focus Style": "Solution Focus",
+                        "Action Style": "Proactive",
+                        "Information Style": "Global (Big Picture)",
+                        "Reasoning Style": "Optional",
+                        "Primary System": "Kinesthetic"
+                    },
+                     comments: {
+                        leadership: "The on-field coach. Understands and directs the team's tactical shape.",
+                        personality: "Calm and composed, energy is focused and not wasted.",
+                        mentalSkills: "Extremely resilient and maintains high energy throughout. Open to new ideas.",
+                        copingSkills: "Master of controlling his own emotional state and the tempo of the game.",
+                        cognitiveProfile: "Sees the overall game plan and finds creative solutions. Motivated by achieving success. Takes initiative."
+                    }
+                }
+            }
+        ];
+
+        function getScoreBackground(value) {
+            const red = '#EF233C', orange = '#FFA500', yellow = '#FFFF00', 
+                  lightGreen = '#ADFF2F', green = '#7CFC00', fullGreen = '#32CD32', darkGreen = '#228B22';
+            if (value <= 4) return `background-color: ${red};`;
+            if (value === 5) return `background: linear-gradient(to right, ${orange} 60%, ${yellow} 100%);`;
+            if (value === 6) return `background: linear-gradient(to right, ${orange} 25%, ${yellow} 75%);`;
+            if (value === 7) return `background: linear-gradient(to right, ${yellow} 50%, ${lightGreen} 100%);`;
+            if (value === 8) return `background: linear-gradient(to right, ${lightGreen} 50%, ${green} 100%);`;
+            if (value === 9) return `background-color: ${fullGreen};`;
+            if (value >= 10) return `background-color: ${darkGreen};`;
+            return `background-color: #cccccc;`;
+        }
+
+        function createParameterHTML(playerData) {
+            let html = '';
+            const sections = {
+                leadership: { title: "Leadership Profile", type: 'score' },
+                personality: { title: "Personality Profile", type: 'multi', options: { "Extroversion Energy": ["Low", "Med Low", "Medium", "High"] } },
+                mentalSkills: { title: "Mental Skills", type: 'score' },
+                copingSkills: { title: "Coping Skills", type: 'score' },
+                cognitiveProfile: { title: "Cognitive & Motivational Profile", type: 'multi', options: {
+                    "Motivation": ["Towards Pleasure", "Away From Pain"],
+                    "Focus Style": ["Solution Focus", "Problem Focus"],
+                    "Action Style": ["Proactive", "Reactive"],
+                    "Information Style": ["Global", "Specific"],
+                    "Reasoning Style": ["Optional", "Procedural"],
+                    "Primary System": ["Visual", "Auditory", "Kinesthetic"]
+                }}
+            };
+
+            for (const sectionKey in sections) {
+                const section = sections[sectionKey];
+                const commentText = playerData.data.comments[sectionKey] || "";
+
+                html += `<div class="section-wrapper">`;
+                html += `<div class="parameter-section"><h3>${section.title}</h3>`;
+                
+                for (const paramKey in playerData.data[sectionKey]) {
+                    const value = playerData.data[sectionKey][paramKey];
+                    html += `<div class="parameter"><div class="parameter-name">${paramKey}</div>`;
+
+                    if (section.type === 'score') {
+                        const textColorClass = (value >= 5 && value <= 7) ? 'dark-text' : '';
+                        html += `<div class="score-bar-container"><div class="score-bar" style="width: ${value * 10}%; ${getScoreBackground(value)}"><span class="score-value ${textColorClass}">${value}</span></div></div>`;
+                    } else if (section.type === 'multi') {
+                        html += `<div class="multi-option-bar">`;
+                        section.options[paramKey].forEach(option => {
+                            const isSelected = (option === value);
+                            html += `<div class="multi-option ${isSelected ? 'selected' : 'not-selected'}">${option}</div>`;
+                        });
+                        html += `</div>`;
+                    }
+                    html += `</div>`;
+                }
+                html += `</div>`; // Close parameter-section
+                html += `<textarea class="section-comment-box" placeholder="Click to add a note for this section...">${commentText}</textarea>`;
+                html += `</div>`; // Close section-wrapper
+            }
+            return html;
+        }
+
+        function generatePlayerCards() {
+            const container = document.getElementById('cards-container');
+            if (!container) return;
+
+            let allCardsHTML = '';
+            playerData.forEach((player, index) => {
+                const parametersHTML = createParameterHTML(player);
+                const cardId = `player-card-${index}`;
+                
+                allCardsHTML += `
+                    <div class="player-card" id="${cardId}">
+                        <div class="card-header"><h1>Mental Profile</h1></div>
+                        <div class="card-content">
+                            <div class="player-info-col">
+                                <div class="player-photo-container" onclick="triggerPhotoUpload('photo-${index}')">
+                                    <img id="photo-${index}" src="${player.photoUrl}" alt="Photo of ${player.fullName}" onerror="this.onerror=null;this.src='https://placehold.co/300x300/cccccc/ffffff?text=Click+to+Upload';">
+                                    <div class="photo-upload-overlay">Click to Upload</div>
+                                    <input type="file" class="no-print" id="upload-${index}" style="display: none;" onchange="handlePhotoUpload(event, 'photo-${index}')">
+                                </div>
+                                <h2>${player.fullName}</h2>
+                                <p>Shirt Number: ${player.shirtNumber}</p>
+                                <button class="pdf-button no-print" onclick="saveCardAsPDF('${cardId}', '${player.fullName}')">Save as PDF</button>
+                            </div>
+                            <div class="main-content-col">${parametersHTML}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = allCardsHTML;
+        }
+        
+        function triggerPhotoUpload(imgId) {
+            const uploadId = imgId.replace('photo-', 'upload-');
+            document.getElementById(uploadId).click();
+        }
+
+        function handlePhotoUpload(event, imgId) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById(imgId).src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function saveCardAsPDF(cardId, playerName) {
+            const element = document.getElementById(cardId);
+            const filename = `${playerName}_MentalProfile.pdf`;
+            
+            // Before generating PDF, copy textarea content to a printable div
+            const textareas = element.querySelectorAll('textarea.section-comment-box');
+            textareas.forEach(textarea => {
+                const printableDiv = document.createElement('div');
+                printableDiv.className = 'section-comment-box printable-comment';
+                printableDiv.textContent = textarea.value;
+                textarea.style.display = 'none'; // Hide textarea
+                textarea.parentNode.insertBefore(printableDiv, textarea.nextSibling);
+            });
+
+            const opt = {
+                margin:       [5, 5, 5, 5],
+                filename:     filename,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+
+            const button = element.querySelector('.pdf-button');
+            if (button) button.style.display = 'none';
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                if (button) button.style.display = 'block';
+                // Clean up after PDF generation
+                const printableDivs = element.querySelectorAll('.printable-comment');
+                printableDivs.forEach(div => div.remove());
+                textareas.forEach(textarea => textarea.style.display = 'block'); // Show textarea again
+            });
+        }
+
+        window.onload = generatePlayerCards;
+    </script>
+</body>
+</html>
