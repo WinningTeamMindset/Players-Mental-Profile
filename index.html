@@ -87,6 +87,9 @@
         .header-actions {
             flex-basis: 33%;
             text-align: right;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
         }
 
         /* Main Content Area Layout */
@@ -232,6 +235,7 @@
             font-size: 0.6em;
             padding: 0 2px;
             text-align: center;
+            cursor: pointer;
         }
         .multi-option.selected {
             background-color: #38b000;
@@ -243,7 +247,7 @@
             color: #adb5bd;
         }
         
-        .pdf-button {
+        .action-button {
             padding: 8px 16px;
             font-size: 0.9em;
             font-weight: 600;
@@ -254,9 +258,16 @@
             cursor: pointer;
             transition: background-color 0.3s;
         }
-        .pdf-button:hover {
+        .action-button:hover {
             background-color: #2c4a8a;
         }
+        .save-button {
+            background-color: #28a745;
+        }
+        .save-button:hover {
+            background-color: #218838;
+        }
+
 
         /* Print-specific styles */
         @media print {
@@ -281,9 +292,9 @@
             shirtNumber: "",
             photoUrl: "https://placehold.co/300x300/cccccc/ffffff?text=Upload",
             data: {
-                leadership: { "Overall": 5, "By Example": 5, "Vocal": 5 },
+                leadership: { "Overall": 5, "By Example": 5, "Vocal": 5, "Empathy": 5, "Listening": 5, "Expressive": 5, "Positive Energy": 5, "Accountability": 5 },
                 personality: { "Extroversion Energy": "Medium" },
-                communication: { "Clarity": 5, "Receptiveness": 5 },
+                communication: { "Clarity": 5, "Receptiveness": 5, "Task Cohesion": "Optimal", "Social Cohesion": "Optimal", "Team Connection": "Optimal", "Spontaneity": "Optimal", "Honest Comms": "Optimal" },
                 englishLanguage: { "Comprehension": 5, "Fluency": 5 },
                 mentalSkills: { "Resilience": 5, "Psychological Energy": 5, "Achievement Drive": 5, "Growth Mindset": 5 },
                 copingSkills: { "Stress Control": 5, "Anxiety Control": 5, "Game Management": 5 },
@@ -292,9 +303,16 @@
             }
         };
 
-        // Add 35 empty profiles
-        for (let i = 0; i < 35; i++) {
-            playerData.push(JSON.parse(JSON.stringify(emptyProfileTemplate)));
+        function initializeData() {
+            const savedData = localStorage.getItem('kvcWesterloMentalProfiles');
+            if (savedData) {
+                playerData = JSON.parse(savedData);
+            } else {
+                // Add 35 empty profiles if no saved data
+                for (let i = 0; i < 35; i++) {
+                    playerData.push(JSON.parse(JSON.stringify(emptyProfileTemplate)));
+                }
+            }
         }
 
 
@@ -320,26 +338,18 @@
         }
 
         function createParameterHTML(player, playerIndex) {
-            let html = '';
             const sections = {
                 leadership: { title: "Leadership Profile", type: 'score' },
                 personality: { title: "Personality Profile", type: 'multi', options: { "Extroversion Energy": ["Low", "Med Low", "Medium", "High"] } },
-                communication: { title: "Communication", type: 'score' },
+                communication: { title: "Communication & Group Climate", type: 'mixed', score_params: ["Clarity", "Receptiveness"], multi_params: { "Task Cohesion": ["Low", "Optimal", "High"], "Social Cohesion": ["Low", "Optimal", "High"], "Team Connection": ["Low", "Optimal", "High"], "Spontaneity": ["Low", "Optimal", "High"], "Honest Comms": ["Low", "Optimal", "High"] }},
                 englishLanguage: { title: "English Language", type: 'score' },
                 mentalSkills: { title: "Mental Skills", type: 'score' },
                 copingSkills: { title: "Coping Skills", type: 'score' },
-                cognitiveProfile: { title: "Cognitive & Motivational Profile", type: 'multi', options: {
-                    "Motivation": ["Towards Pleasure", "Away From Pain"],
-                    "Focus Style": ["Solution Focus", "Problem Focus"],
-                    "Action Style": ["Proactive", "Reactive"],
-                    "Information Style": ["Global", "Specific"],
-                    "Reasoning Style": ["Optional", "Procedural"],
-                    "Primary System": ["Visual", "Auditory", "Kinesthetic"]
-                }}
+                cognitiveProfile: { title: "Cognitive & Motivational Profile", type: 'multi', options: { "Motivation": ["Towards Pleasure", "Away From Pain"], "Focus Style": ["Solution Focus", "Problem Focus"], "Action Style": ["Proactive", "Reactive"], "Information Style": ["Global", "Specific"], "Reasoning Style": ["Optional", "Procedural"], "Primary System": ["Visual", "Auditory", "Kinesthetic"] }}
             };
 
-            const column1Keys = ['leadership', 'personality', 'communication', 'englishLanguage'];
-            const column2Keys = ['mentalSkills', 'copingSkills', 'cognitiveProfile'];
+            const column1Keys = ['leadership', 'personality', 'communication'];
+            const column2Keys = ['englishLanguage', 'mentalSkills', 'copingSkills', 'cognitiveProfile'];
             
             let column1HTML = '';
             let column2HTML = '';
@@ -349,11 +359,15 @@
                 const commentText = player.data.comments[sectionKey] || "";
                 
                 let averageScoreHTML = '';
-                if (section.type === 'score') {
-                    const scores = Object.values(player.data[sectionKey]);
-                    const sum = scores.reduce((a, b) => a + b, 0);
-                    const avg = (sum / scores.length).toFixed(1);
-                    averageScoreHTML = `<div class="average-score-container"><div class="average-score-bullet" style="background-color: ${getAverageScoreBackground(avg)}">${avg}</div><div class="average-score-label">average</div></div>`;
+                if (section.type === 'score' || section.type === 'mixed') {
+                    const scores = [];
+                    const scoreKeys = section.type === 'mixed' ? section.score_params : Object.keys(player.data[sectionKey]);
+                    scoreKeys.forEach(key => { if (typeof player.data[sectionKey][key] === 'number') { scores.push(player.data[sectionKey][key]); }});
+                    if(scores.length > 0) {
+                        const sum = scores.reduce((a, b) => a + b, 0);
+                        const avg = (sum / scores.length).toFixed(1);
+                        averageScoreHTML = `<div class="average-score-container"><div class="average-score-bullet" style="background-color: ${getAverageScoreBackground(avg)}">${avg}</div><div class="average-score-label">average</div></div>`;
+                    }
                 }
 
                 let sectionHTML = `<div class="section-wrapper"><div class="parameter-section"><div class="section-header"><h3>${section.title}</h3>${averageScoreHTML}</div>`;
@@ -362,12 +376,13 @@
                     const value = player.data[sectionKey][paramKey];
                     sectionHTML += `<div class="parameter"><div class="parameter-name">${paramKey}</div>`;
 
-                    if (section.type === 'score') {
+                    if (section.type === 'score' || (section.type === 'mixed' && section.score_params.includes(paramKey))) {
                         const textColorClass = (value >= 5 && value <= 7) ? 'dark-text' : '';
                         sectionHTML += `<div class="score-bar-container" data-player-index="${playerIndex}" data-section="${sectionKey}" data-param="${paramKey}"><div class="score-bar" style="width: ${value * 10}%; ${getScoreBackground(value)}"><span class="score-value ${textColorClass}">${value}</span></div></div>`;
-                    } else if (section.type === 'multi') {
-                        sectionHTML += `<div class="multi-option-bar">`;
-                        section.options[paramKey].forEach(option => {
+                    } else if (section.type === 'multi' || (section.type === 'mixed' && section.multi_params[paramKey])) {
+                        const options = section.type === 'multi' ? section.options[paramKey] : section.multi_params[paramKey];
+                        sectionHTML += `<div class="multi-option-bar" data-player-index="${playerIndex}" data-section="${sectionKey}" data-param="${paramKey}">`;
+                        options.forEach(option => {
                             const isSelected = (option === value);
                             sectionHTML += `<div class="multi-option ${isSelected ? 'selected' : 'not-selected'}">${option}</div>`;
                         });
@@ -375,13 +390,9 @@
                     }
                     sectionHTML += `</div>`;
                 }
-                sectionHTML += `</div><textarea class="section-comment-box" placeholder="Click to add a note...">${commentText}</textarea></div>`;
+                sectionHTML += `</div><textarea class="section-comment-box" onchange="updateComment(${playerIndex}, '${sectionKey}', this.value)" placeholder="Click to add a note...">${commentText}</textarea></div>`;
                 
-                if (column1Keys.includes(sectionKey)) {
-                    column1HTML += sectionHTML;
-                } else {
-                    column2HTML += sectionHTML;
-                }
+                if (column1Keys.includes(sectionKey)) { column1HTML += sectionHTML; } else { column2HTML += sectionHTML; }
             });
 
             return `<div class="content-column">${column1HTML}</div><div class="content-column">${column2HTML}</div>`;
@@ -403,12 +414,13 @@
                                 <img id="photo-${index}" src="${player.photoUrl}" alt="Photo of ${player.fullName}" onclick="triggerPhotoUpload('${index}')" onerror="this.onerror=null;this.src='https://placehold.co/300x300/cccccc/ffffff?text=Photo';">
                                 <div class="player-details">
                                     <input type="text" class="player-name-input" value="${player.fullName}" placeholder="Player Name" onchange="updatePlayerData(${index}, 'fullName', this.value)">
-                                    <input type="text" class="shirt-number-input" value="${player.shirtNumber ? 'Shirt Number: ' + player.shirtNumber : ''}" placeholder="Shirt Number" onchange="updatePlayerData(${index}, 'shirtNumber', this.value.replace('Shirt Number: ', ''))">
+                                    <input type="text" class="shirt-number-input" value="${player.shirtNumber ? 'Shirt Nr: ' + player.shirtNumber : ''}" placeholder="Shirt Nr" onchange="updatePlayerData(${index}, 'shirtNumber', this.value.replace('Shirt Nr: ', ''))">
                                 </div>
                              </div>
                             <h1>Mental Profile</h1>
                             <div class="header-actions no-print">
-                                 <button class="pdf-button" onclick="saveCardAsPDF('${cardId}')">Save as PDF</button>
+                                 <button class="action-button save-button" onclick="saveAllData(this)">Save All</button>
+                                 <button class="action-button" onclick="saveCardAsPDF('${cardId}')">Save as PDF</button>
                             </div>
                         </div>
                         <div class="card-content">
@@ -419,15 +431,19 @@
             });
             container.innerHTML = allCardsHTML;
             addDragListeners();
+            addMultiOptionListeners();
         }
         
         function updatePlayerData(playerIndex, key, value) {
             playerData[playerIndex][key] = value;
         }
+        
+        function updateComment(playerIndex, sectionKey, value) {
+            playerData[playerIndex].data.comments[sectionKey] = value;
+        }
 
         function triggerPhotoUpload(index) {
             const uploadId = `upload-${index}`;
-            // Create the input element if it doesn't exist (for new profiles)
             if (!document.getElementById(uploadId)) {
                 const input = document.createElement('input');
                 input.type = 'file';
@@ -446,13 +462,13 @@
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     document.getElementById(`photo-${index}`).src = e.target.result;
-                    playerData[index].photoUrl = e.target.result; // Save for PDF
+                    playerData[index].photoUrl = e.target.result;
                 }
                 reader.readAsDataURL(file);
             }
         }
         
-        // --- DRAGGABLE SCORE BAR LOGIC ---
+        // --- INTERACTIVE BAR LOGIC ---
         let currentDragElement = null;
 
         function addDragListeners() {
@@ -461,6 +477,31 @@
                 container.addEventListener('mousedown', startDrag);
                 container.addEventListener('touchstart', startDrag, { passive: false });
             });
+        }
+        
+        function addMultiOptionListeners() {
+            const options = document.querySelectorAll('.multi-option');
+            options.forEach(option => {
+                option.addEventListener('click', selectMultiOption);
+            });
+        }
+
+        function selectMultiOption(e) {
+            const selectedOption = e.currentTarget;
+            const parentBar = selectedOption.parentNode;
+            
+            parentBar.querySelectorAll('.multi-option').forEach(opt => {
+                opt.classList.remove('selected');
+                opt.classList.add('not-selected');
+            });
+
+            selectedOption.classList.add('selected');
+            selectedOption.classList.remove('not-selected');
+
+            const playerIndex = parentBar.dataset.playerIndex;
+            const section = parentBar.dataset.section;
+            const param = parentBar.dataset.param;
+            playerData[playerIndex].data[section][param] = selectedOption.textContent;
         }
 
         function startDrag(e) {
@@ -497,7 +538,6 @@
             let score = Math.round(percentage / 10);
             score = Math.max(1, Math.min(10, score));
 
-            // Update UI
             const scoreBar = currentDragElement.querySelector('.score-bar');
             const scoreValue = currentDragElement.querySelector('.score-value');
             scoreBar.style.width = `${score * 10}%`;
@@ -505,18 +545,25 @@
             scoreValue.textContent = score;
             scoreValue.classList.toggle('dark-text', score >= 5 && score <= 7);
 
-            // Update Data Model
             const playerIndex = currentDragElement.dataset.playerIndex;
             const section = currentDragElement.dataset.section;
             const param = currentDragElement.dataset.param;
             playerData[playerIndex].data[section][param] = score;
         }
+        
+        // --- SAVE & LOAD LOGIC ---
+        function saveAllData(button) {
+            localStorage.setItem('kvcWesterloMentalProfiles', JSON.stringify(playerData));
+            button.textContent = 'Saved!';
+            setTimeout(() => { button.textContent = 'Save All'; }, 2000);
+        }
 
         // --- PDF GENERATION LOGIC ---
         function saveCardAsPDF(cardId) {
             const element = document.getElementById(cardId);
-            const playerName = element.querySelector('.player-name-input').value || "Unnamed_Player";
-            const filename = `${playerName}_MentalProfile.pdf`;
+            const playerIndex = element.dataset.playerIndex;
+            const playerName = playerData[playerIndex].fullName || "Unnamed_Player";
+            const filename = `${playerName}_MP.pdf`;
             
             const textareas = element.querySelectorAll('textarea.section-comment-box');
             textareas.forEach(textarea => {
@@ -530,7 +577,7 @@
             const inputs = element.querySelectorAll('.player-details input');
             inputs.forEach(input => {
                  const printableText = document.createElement('div');
-                 printableText.className = input.className.replace('-input', '-text'); // for styling
+                 printableText.className = input.className.replace('-input', '-text');
                  if (input.classList.contains('player-name-input')) {
                      printableText.style.fontSize = '1.6em';
                      printableText.style.fontWeight = 'bold';
@@ -553,11 +600,11 @@
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
             };
 
-            const button = element.querySelector('.pdf-button');
-            if (button) button.style.display = 'none';
+            const actions = element.querySelector('.header-actions');
+            if (actions) actions.style.display = 'none';
 
             html2pdf().set(opt).from(element).save().then(() => {
-                if (button) button.style.display = 'block';
+                if (actions) actions.style.display = 'flex';
                 element.querySelectorAll('.printable-comment').forEach(div => div.remove());
                 textareas.forEach(textarea => textarea.style.display = 'block');
                 element.querySelectorAll('.player-details div').forEach(div => div.remove());
@@ -565,7 +612,10 @@
             });
         }
 
-        window.onload = generatePlayerCards;
+        window.onload = () => {
+            initializeData();
+            generatePlayerCards();
+        };
     </script>
 </body>
 </html>
