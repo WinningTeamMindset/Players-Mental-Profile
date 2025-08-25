@@ -576,7 +576,7 @@
             setTimeout(() => { button.textContent = 'Save All'; }, 2000);
         }
 
-        // --- PDF GENERATION LOGIC ---
+        // --- PDF GENERATION LOGIC (CORRECTED) ---
         function saveCardAsPDF(cardId) {
             const element = document.getElementById(cardId);
             const playerIndex = element.dataset.playerIndex;
@@ -605,10 +605,10 @@
 
 
             const opt = {
-                margin:       [5, 5, 5, 5],
+                margin:       [2, 2, 2, 2], // Minimal margin
                 filename:     filename,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
+                image:        { type: 'jpeg', quality: 1.0 },
+                html2canvas:  { scale: 2, useCORS: true, logging: false },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
             };
 
