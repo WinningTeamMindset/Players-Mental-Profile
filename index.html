@@ -1,272 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KVC Westerlo - Advanced Mental Profiles</title>
-    <!-- Library for PDF Generation -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <style>
-        /* General Body and Font Styles */
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: #f0f2f5;
-            margin: 0;
-            padding: 20px;
-            color: #333;
-            user-select: none; /* Prevents text selection during drag */
-        }
-
-        /* Player Card Container Styles */
-        .player-card {
-            background-color: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            padding: 15px;
-            margin-bottom: 30px;
-            display: flex;
-            flex-direction: column;
-            width: 28.5cm; /* Adjusted for PDF fit */
-            height: 19.5cm; /* Adjusted for PDF fit */
-            box-sizing: border-box;
-            page-break-after: always;
-        }
-
-        /* Card Header Styles */
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #e0e0e0;
-            padding-bottom: 8px;
-            margin-bottom: 10px;
-        }
-        
-        .header-player-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            flex-basis: 33%;
-        }
-        
-        .header-player-info img {
-             width: 60px;
-             height: 60px;
-             border-radius: 50%;
-             object-fit: cover;
-             border: 3px solid #1a2a4c;
-             cursor: pointer;
-        }
-        
-        .player-details input {
-            border: none;
-            background: transparent;
-            font-family: inherit;
-        }
-        .player-details input.player-name-input {
-            font-size: 1.6em;
-            color: #1a2a4c;
-            font-weight: bold;
-            width: 100%;
-        }
-        .player-details input.shirt-number-input {
-            font-size: 1.3em;
-            color: #555;
-            width: 120px;
-        }
-
-        .card-header h1 {
-            margin: 0;
-            font-size: 1.8em;
-            color: #1a2a4c;
-            font-weight: 700;
-            text-align: center;
-            flex-basis: 33%;
-        }
-        
-        .header-actions {
-            flex-basis: 33%;
-            text-align: right;
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-        }
-
-        /* Main Content Area Layout */
-        .card-content {
-            display: flex;
-            flex-grow: 1;
-            gap: 20px;
-            overflow: hidden;
-        }
-        
-        /* Main Content Columns */
-        .content-column {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .parameter-section {
-            width: 100%;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .parameter-section h3 {
-            margin: 0;
-            font-size: 1em;
-            color: #1a2a4c;
-            padding-bottom: 3px;
-            border-bottom: 1px solid #e0e0e0;
-            flex-grow: 1;
-        }
-        
-        .average-score-container {
-            text-align: center;
-            margin-left: 15px;
-        }
-        .average-score-bullet {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            font-size: 0.9em;
-            margin: 0 auto;
-            text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
-        }
-        .average-score-label {
-            font-size: 0.6em;
-            color: #666;
-            margin-top: 2px;
-        }
-        
-        .parameter {
-            display: grid;
-            grid-template-columns: 110px 1fr;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-
-        .parameter-name {
-            font-size: 0.85em;
-            font-weight: 600;
-            text-align: right;
-        }
-        
-        /* Bar Styles */
-        .score-bar-container, .multi-option-bar {
-            background-color: #e9ecef;
-            border-radius: 25px;
-            height: 18px;
-            width: 100%;
-            overflow: hidden;
-            position: relative;
-            display: flex;
-        }
-        
-        .score-bar-container {
-            cursor: pointer;
-        }
-
-        .score-bar {
-            height: 100%;
-            border-radius: 25px;
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            padding-right: 8px;
-            box-sizing: border-box;
-            pointer-events: none;
-        }
-
-        .score-value {
-            color: white;
-            font-weight: bold;
-            font-size: 0.7em;
-            text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
-            pointer-events: none;
-        }
-        .score-value.dark-text {
-            color: #333;
-            text-shadow: none;
-        }
-
-        .multi-option-bar {
-             border: 1px solid #ccc;
-        }
-        .multi-option {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 0.6em;
-            padding: 0 2px;
-            text-align: center;
-            cursor: pointer;
-        }
-        .multi-option.selected {
-            background-color: #38b000;
-            color: white;
-            font-weight: 700;
-        }
-        .multi-option.selected-warn {
-            background: linear-gradient(to right, #FFA500, #FFFF00);
-            color: #333;
-            font-weight: 700;
-        }
-        .multi-option.not-selected {
-            background-color: #e9ecef;
-            color: #adb5bd;
-        }
-        
-        .action-button {
-            padding: 8px 16px;
-            font-size: 0.9em;
-            font-weight: 600;
-            color: white;
-            background-color: #1a2a4c;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        .action-button:hover {
-            background-color: #2c4a8a;
-        }
-        .save-button {
-            background-color: #28a745;
-        }
-        .save-button:hover {
-            background-color: #218838;
-        }
-
-
-        /* Print-specific styles */
-        @media print {
-            body { background-color: #fff; padding: 0; margin: 0; }
-            .player-card { box-shadow: none; border: 1px solid #ccc; margin: 0; border-radius: 0; width: 100%; height: 100%; }
-            .no-print { display: none !important; }
-        }
-    </style>
-</head>
-<body>
-
-    <div id="cards-container"></div>
-
-    <script>
-        // --- PLAYER DATA ---
+// --- PLAYER DATA ---
         let playerData = [];
 
         // --- EMPTY PROFILE TEMPLATE ---
@@ -297,7 +29,36 @@
         function initializeData() {
             const savedData = localStorage.getItem('kvcWesterloMentalProfiles');
             if (savedData) {
-                playerData = JSON.parse(savedData);
+                const loadedProfiles = JSON.parse(savedData);
+                
+                // Safely merge saved data with the new template
+                playerData = loadedProfiles.map(savedProfile => {
+                    const newProfile = JSON.parse(JSON.stringify(emptyProfileTemplate));
+                    
+                    // Merge data section by section to preserve saved values and add new ones
+                    for (const sectionKey in newProfile.data) {
+                        if (savedProfile.data && savedProfile.data[sectionKey]) {
+                            for (const paramKey in newProfile.data[sectionKey]) {
+                                if (savedProfile.data[sectionKey][paramKey] !== undefined) {
+                                    newProfile.data[sectionKey][paramKey] = savedProfile.data[sectionKey][paramKey];
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Copy top-level info
+                    newProfile.fullName = savedProfile.fullName || "";
+                    newProfile.shirtNumber = savedProfile.shirtNumber || "";
+                    newProfile.photoUrl = savedProfile.photoUrl || emptyProfileTemplate.photoUrl;
+
+                    return newProfile;
+                });
+
+                // Ensure there are always at least 35 profiles
+                while (playerData.length < 35) {
+                    playerData.push(JSON.parse(JSON.stringify(emptyProfileTemplate)));
+                }
+
             } else {
                 // Add 35 empty profiles if no saved data
                 for (let i = 0; i < 35; i++) {
@@ -583,10 +344,14 @@
             const playerName = playerData[playerIndex].fullName || "Unnamed_Player";
             const filename = `${playerName}_MP.pdf`;
             
-            const inputs = element.querySelectorAll('.player-details input');
+            // Create a clone of the element to modify for printing
+            const elementToPrint = element.cloneNode(true);
+            
+            // On the clone, replace inputs with static text for printing
+            const inputs = elementToPrint.querySelectorAll('.player-details input');
             inputs.forEach(input => {
                  const printableText = document.createElement('div');
-                 printableText.className = input.className.replace('-input', '-text');
+                 // Copy relevant styles from the input's class
                  if (input.classList.contains('player-name-input')) {
                      printableText.style.fontSize = '1.6em';
                      printableText.style.fontWeight = 'bold';
@@ -596,8 +361,7 @@
                      printableText.style.color = '#555';
                  }
                  printableText.textContent = input.value;
-                 input.style.display = 'none';
-                 input.parentNode.insertBefore(printableText, input);
+                 input.parentNode.replaceChild(printableText, input);
             });
 
 
@@ -609,20 +373,13 @@
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
             };
 
-            const actions = element.querySelector('.header-actions');
+            const actions = elementToPrint.querySelector('.header-actions');
             if (actions) actions.style.display = 'none';
 
-            html2pdf().set(opt).from(element).save().then(() => {
-                if (actions) actions.style.display = 'flex';
-                element.querySelectorAll('.player-details div').forEach(div => div.remove());
-                inputs.forEach(input => input.style.display = 'block');
-            });
+            html2pdf().set(opt).from(elementToPrint).save();
         }
 
         window.onload = () => {
             initializeData();
             generatePlayerCards();
         };
-    </script>
-</body>
-</html>
