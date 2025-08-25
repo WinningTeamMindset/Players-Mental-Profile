@@ -1,7 +1,7 @@
- <m<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-eta charset="UTF-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KVC Westerlo - Advanced Mental Profiles</title>
     <!-- Library for PDF Generation -->
@@ -273,54 +273,7 @@ eta charset="UTF-8">
 
     <script>
         // --- PLAYER DATA ---
-        let playerData = [
-            {
-                fullName: "Roman Neustädter",
-                shirtNumber: 6,
-                photoUrl: "https://placehold.co/300x300/1a2a4c/ffffff?text=RN",
-                data: {
-                    leadership: { "Overall": 8, "By Example": 9, "Vocal": 7 },
-                    personality: { "Extroversion Energy": "Medium" },
-                    communication: { "Clarity": 7, "Receptiveness": 6 },
-                    englishLanguage: { "Comprehension": 9, "Fluency": 8 },
-                    mentalSkills: { "Resilience": 8, "Psychological Energy": 7, "Achievement Drive": 9, "Growth Mindset": 7 },
-                    copingSkills: { "Stress Control": 8, "Anxiety Control": 7, "Game Management": 9 },
-                    cognitiveProfile: { "Motivation": "Away From Pain", "Focus Style": "Problem Focus", "Action Style": "Reactive", "Information Style": "Specific (Details)", "Reasoning Style": "Procedural", "Primary System": "Auditory" },
-                    comments: {
-                        leadership: "Leads with experience but communication can become negative under pressure.",
-                        personality: "Balanced energy. Not overly expressive but stable.",
-                        communication: "Instructions are clear but can be harsh. Not always open to feedback in the moment.",
-                        englishLanguage: "Fully proficient.",
-                        mentalSkills: "High drive to succeed and very resilient to setbacks. Mindset is more fixed on what he knows.",
-                        copingSkills: "Excellent at managing game situations and controlling stress. Can show anxiety when things go wrong.",
-                        cognitiveProfile: "Needs clear, step-by-step instructions. Motivated by preventing mistakes. Analyzes situations before acting."
-                    }
-                }
-            },
-            {
-                fullName: "Serhiy Sydorchuk",
-                shirtNumber: 8,
-                photoUrl: "https://placehold.co/300x300/c2a100/ffffff?text=SS",
-                data: {
-                    leadership: { "Overall": 9, "By Example": 8, "Vocal": 9 },
-                    personality: { "Extroversion Energy": "Med Low" },
-                    communication: { "Clarity": 9, "Receptiveness": 8 },
-                    englishLanguage: { "Comprehension": 7, "Fluency": 6 },
-                    mentalSkills: { "Resilience": 9, "Psychological Energy": 8, "Achievement Drive": 8, "Growth Mindset": 8 },
-                    copingSkills: { "Stress Control": 9, "Anxiety Control": 9, "Game Management": 8 },
-                    cognitiveProfile: { "Motivation": "Towards Pleasure", "Focus Style": "Solution Focus", "Action Style": "Proactive", "Information Style": "Global (Big Picture)", "Reasoning Style": "Optional", "Primary System": "Kinesthetic" },
-                     comments: {
-                        leadership: "The on-field coach. Understands and directs the team's tactical shape.",
-                        personality: "Calm and composed, energy is focused and not wasted.",
-                        communication: "Excellent at giving constructive, tactical feedback.",
-                        englishLanguage: "Good understanding, but can be hesitant when speaking.",
-                        mentalSkills: "Extremely resilient and maintains high energy throughout. Open to new ideas.",
-                        copingSkills: "Master of controlling his own emotional state and the tempo of the game.",
-                        cognitiveProfile: "Sees the overall game plan and finds creative solutions. Motivated by achieving success. Takes initiative."
-                    }
-                }
-            }
-        ];
+        let playerData = [];
 
         // --- EMPTY PROFILE TEMPLATE ---
         const emptyProfileTemplate = {
@@ -339,8 +292,8 @@ eta charset="UTF-8">
             }
         };
 
-        // Add 5 empty profiles
-        for (let i = 0; i < 5; i++) {
+        // Add 35 empty profiles
+        for (let i = 0; i < 35; i++) {
             playerData.push(JSON.parse(JSON.stringify(emptyProfileTemplate)));
         }
 
@@ -473,7 +426,18 @@ eta charset="UTF-8">
         }
 
         function triggerPhotoUpload(index) {
-            document.getElementById(`upload-${index}`).click();
+            const uploadId = `upload-${index}`;
+            // Create the input element if it doesn't exist (for new profiles)
+            if (!document.getElementById(uploadId)) {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.className = 'no-print';
+                input.id = uploadId;
+                input.style.display = 'none';
+                input.onchange = (event) => handlePhotoUpload(event, index);
+                document.body.appendChild(input);
+            }
+            document.getElementById(uploadId).click();
         }
 
         function handlePhotoUpload(event, index) {
@@ -566,7 +530,15 @@ eta charset="UTF-8">
             const inputs = element.querySelectorAll('.player-details input');
             inputs.forEach(input => {
                  const printableText = document.createElement('div');
-                 printableText.className = input.className;
+                 printableText.className = input.className.replace('-input', '-text'); // for styling
+                 if (input.classList.contains('player-name-input')) {
+                     printableText.style.fontSize = '1.6em';
+                     printableText.style.fontWeight = 'bold';
+                     printableText.style.color = '#1a2a4c';
+                 } else {
+                     printableText.style.fontSize = '1.3em';
+                     printableText.style.color = '#555';
+                 }
                  printableText.textContent = input.value;
                  input.style.display = 'none';
                  input.parentNode.insertBefore(printableText, input);
