@@ -221,6 +221,11 @@
             color: white;
             font-weight: 700;
         }
+        .multi-option.selected-warn {
+            background: linear-gradient(to right, #FFA500, #FFFF00);
+            color: #333;
+            font-weight: 700;
+        }
         .multi-option.not-selected {
             background-color: #e9ecef;
             color: #adb5bd;
@@ -358,8 +363,15 @@
                         const options = section.type === 'multi' ? section.options[paramKey] : section.multi_params[paramKey];
                         sectionHTML += `<div class="multi-option-bar" data-player-index="${playerIndex}" data-section="${sectionKey}" data-param="${paramKey}">`;
                         options.forEach(option => {
-                            const isSelected = (option === value);
-                            sectionHTML += `<div class="multi-option ${isSelected ? 'selected' : 'not-selected'}">${option}</div>`;
+                            let isSelectedClass = 'not-selected';
+                            if (option === value) {
+                                if (sectionKey === 'communication' && (option === 'Low' || option === 'High')) {
+                                    isSelectedClass = 'selected-warn';
+                                } else {
+                                    isSelectedClass = 'selected';
+                                }
+                            }
+                            sectionHTML += `<div class="multi-option ${isSelectedClass}">${option}</div>`;
                         });
                         sectionHTML += `</div>`;
                     }
@@ -460,17 +472,21 @@
         function selectMultiOption(e) {
             const selectedOption = e.currentTarget;
             const parentBar = selectedOption.parentNode;
+            const section = parentBar.dataset.section;
             
             parentBar.querySelectorAll('.multi-option').forEach(opt => {
-                opt.classList.remove('selected');
+                opt.classList.remove('selected', 'selected-warn');
                 opt.classList.add('not-selected');
             });
 
-            selectedOption.classList.add('selected');
+            if (section === 'communication' && (selectedOption.textContent === 'Low' || selectedOption.textContent === 'High')) {
+                selectedOption.classList.add('selected-warn');
+            } else {
+                selectedOption.classList.add('selected');
+            }
             selectedOption.classList.remove('not-selected');
 
             const playerIndex = parentBar.dataset.playerIndex;
-            const section = parentBar.dataset.section;
             const param = parentBar.dataset.param;
             playerData[playerIndex].data[section][param] = selectedOption.textContent;
         }
