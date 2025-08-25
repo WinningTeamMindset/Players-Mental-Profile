@@ -105,39 +105,18 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-        }
-
-        .section-wrapper {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
+            gap: 15px;
         }
 
         .parameter-section {
             width: 100%;
-        }
-        
-        textarea.section-comment-box {
-            width: 100%;
-            box-sizing: border-box;
-            border: 2px solid #FFF3B0;
-            background-color: #FFFAEA;
-            border-radius: 8px;
-            padding: 8px;
-            font-size: 0.8em;
-            line-height: 1.3;
-            color: #555;
-            resize: none;
-            font-family: inherit;
-            height: 45px; /* Adjusted height */
         }
 
         .section-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
 
         .parameter-section h3 {
@@ -177,7 +156,7 @@
             grid-template-columns: 110px 1fr;
             align-items: center;
             gap: 8px;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
 
         .parameter-name {
@@ -274,7 +253,6 @@
             body { background-color: #fff; padding: 0; margin: 0; }
             .player-card { box-shadow: none; border: 1px solid #ccc; margin: 0; border-radius: 0; width: 100%; height: 100%; }
             .no-print { display: none !important; }
-            textarea.section-comment-box { border-color: #FFC300; }
         }
     </style>
 </head>
@@ -292,14 +270,12 @@
             shirtNumber: "",
             photoUrl: "https://placehold.co/300x300/cccccc/ffffff?text=Upload",
             data: {
-                leadership: { "Overall": 5, "By Example": 5, "Vocal": 5, "Empathy": 5, "Listening": 5, "Expressive": 5, "Positive Energy": 5, "Accountability": 5 },
-                personality: { "Extroversion Energy": "Medium" },
+                leadership: { "Influence": 5, "By Example": 5, "Vocal": 5, "Empathy": 5, "Listening": 5, "Expressive": 5, "Positive Energy": 5, "Accountability": 5 },
+                personality: { "Energy Style": "Ambivert", "Information Style": "Pragmatist", "Decision Style": "Logical", "Lifestyle": "Planner" },
                 communication: { "Clarity": 5, "Receptiveness": 5, "Task Cohesion": "Optimal", "Social Cohesion": "Optimal", "Team Connection": "Optimal", "Spontaneity": "Optimal", "Honest Comms": "Optimal" },
-                englishLanguage: { "Comprehension": 5, "Fluency": 5 },
-                mentalSkills: { "Resilience": 5, "Psychological Energy": 5, "Achievement Drive": 5, "Growth Mindset": 5 },
-                copingSkills: { "Stress Control": 5, "Anxiety Control": 5, "Game Management": 5 },
-                cognitiveProfile: { "Motivation": "Towards Pleasure", "Focus Style": "Solution Focus", "Action Style": "Proactive", "Information Style": "Global", "Reasoning Style": "Optional", "Primary System": "Visual" },
-                comments: { leadership: "", personality: "", communication: "", englishLanguage: "", mentalSkills: "", copingSkills: "", cognitiveProfile: "" }
+                mentalSkills: { "Resilience": 5, "Mental Energy": 5, "Achievement Drive": 5, "Growth Mindset": 5 },
+                copingSkills: { "Problem Solving": 5, "Emotional Regulation": 5, "Self Talk": "Positive" },
+                cognitiveProfile: { "Motivation": "Towards Pleasure", "Focus Style": "Solution Focus", "Action Style": "Proactive", "Information Style": "Global", "Reasoning Style": "Optional", "Primary System": "Visual" }
             }
         };
 
@@ -340,23 +316,21 @@
         function createParameterHTML(player, playerIndex) {
             const sections = {
                 leadership: { title: "Leadership Profile", type: 'score' },
-                personality: { title: "Personality Profile", type: 'multi', options: { "Extroversion Energy": ["Low", "Med Low", "Medium", "High"] } },
+                personality: { title: "Personality Profile", type: 'multi', options: { "Energy Style": ["Introvert", "Ambivert", "Extrovert"], "Information Style": ["Pragmatist", "Visionary"], "Decision Style": ["Logical", "Empathetic"], "Lifestyle": ["Planner", "Adapter"] }},
                 communication: { title: "Communication & Group Climate", type: 'mixed', score_params: ["Clarity", "Receptiveness"], multi_params: { "Task Cohesion": ["Low", "Optimal", "High"], "Social Cohesion": ["Low", "Optimal", "High"], "Team Connection": ["Low", "Optimal", "High"], "Spontaneity": ["Low", "Optimal", "High"], "Honest Comms": ["Low", "Optimal", "High"] }},
-                englishLanguage: { title: "English Language", type: 'score' },
                 mentalSkills: { title: "Mental Skills", type: 'score' },
-                copingSkills: { title: "Coping Skills", type: 'score' },
+                copingSkills: { title: "Coping Skills", type: 'mixed', score_params: ["Problem Solving", "Emotional Regulation"], multi_params: { "Self Talk": ["Positive", "Negative"] }},
                 cognitiveProfile: { title: "Cognitive & Motivational Profile", type: 'multi', options: { "Motivation": ["Towards Pleasure", "Away From Pain"], "Focus Style": ["Solution Focus", "Problem Focus"], "Action Style": ["Proactive", "Reactive"], "Information Style": ["Global", "Specific"], "Reasoning Style": ["Optional", "Procedural"], "Primary System": ["Visual", "Auditory", "Kinesthetic"] }}
             };
 
-            const column1Keys = ['leadership', 'personality', 'communication'];
-            const column2Keys = ['englishLanguage', 'mentalSkills', 'copingSkills', 'cognitiveProfile'];
+            const column1Keys = ['leadership', 'personality', 'mentalSkills'];
+            const column2Keys = ['communication', 'copingSkills', 'cognitiveProfile'];
             
             let column1HTML = '';
             let column2HTML = '';
 
             Object.keys(sections).forEach(sectionKey => {
                 const section = sections[sectionKey];
-                const commentText = player.data.comments[sectionKey] || "";
                 
                 let averageScoreHTML = '';
                 if (section.type === 'score' || section.type === 'mixed') {
@@ -370,7 +344,7 @@
                     }
                 }
 
-                let sectionHTML = `<div class="section-wrapper"><div class="parameter-section"><div class="section-header"><h3>${section.title}</h3>${averageScoreHTML}</div>`;
+                let sectionHTML = `<div class="parameter-section"><div class="section-header"><h3>${section.title}</h3>${averageScoreHTML}</div>`;
                 
                 for (const paramKey in player.data[sectionKey]) {
                     const value = player.data[sectionKey][paramKey];
@@ -390,7 +364,7 @@
                     }
                     sectionHTML += `</div>`;
                 }
-                sectionHTML += `</div><textarea class="section-comment-box" onchange="updateComment(${playerIndex}, '${sectionKey}', this.value)" placeholder="Click to add a note...">${commentText}</textarea></div>`;
+                sectionHTML += `</div>`;
                 
                 if (column1Keys.includes(sectionKey)) { column1HTML += sectionHTML; } else { column2HTML += sectionHTML; }
             });
@@ -436,10 +410,6 @@
         
         function updatePlayerData(playerIndex, key, value) {
             playerData[playerIndex][key] = value;
-        }
-        
-        function updateComment(playerIndex, sectionKey, value) {
-            playerData[playerIndex].data.comments[sectionKey] = value;
         }
 
         function triggerPhotoUpload(index) {
@@ -536,7 +506,7 @@
             
             percentage = Math.max(0, Math.min(100, percentage));
             let score = Math.round(percentage / 10);
-            score = Math.max(1, Math.min(10, score));
+            score = Math.max(0, Math.min(10, score)); // Now allows 0
 
             const scoreBar = currentDragElement.querySelector('.score-bar');
             const scoreValue = currentDragElement.querySelector('.score-value');
@@ -564,15 +534,6 @@
             const playerIndex = element.dataset.playerIndex;
             const playerName = playerData[playerIndex].fullName || "Unnamed_Player";
             const filename = `${playerName}_MP.pdf`;
-            
-            const textareas = element.querySelectorAll('textarea.section-comment-box');
-            textareas.forEach(textarea => {
-                const printableDiv = document.createElement('div');
-                printableDiv.className = 'section-comment-box printable-comment';
-                printableDiv.textContent = textarea.value;
-                textarea.style.display = 'none';
-                textarea.parentNode.insertBefore(printableDiv, textarea.nextSibling);
-            });
             
             const inputs = element.querySelectorAll('.player-details input');
             inputs.forEach(input => {
@@ -605,8 +566,6 @@
 
             html2pdf().set(opt).from(element).save().then(() => {
                 if (actions) actions.style.display = 'flex';
-                element.querySelectorAll('.printable-comment').forEach(div => div.remove());
-                textareas.forEach(textarea => textarea.style.display = 'block');
                 element.querySelectorAll('.player-details div').forEach(div => div.remove());
                 inputs.forEach(input => input.style.display = 'block');
             });
